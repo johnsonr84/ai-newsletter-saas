@@ -1,0 +1,120 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mongodb"
+  url      = env("DATABASE_URL")
+}
+
+/// User model stores minimal information, relies on Clerk for authentication
+model User {
+  id          String        @id @default(auto()) @map("_id") @db.ObjectId
+  clerkUserId String        @unique
+  rssFeeds    RssFeed[]
+  newsletters Newsletter[]
+  settings    UserSettings?
+  createdAt   DateTime      @default(now())
+  updatedAt   DateTime      @updatedAt
+}
+
+/// UserSettings model stores user preferences for newsletter generation
+model UserSettings {
+  id             String   @id @default(auto()) @map("_id") @db.ObjectId
+  userId         String   @unique @db.ObjectId
+  user           User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  // Basic Settings
+  newsletterName String?
+  description    String?
+  targetAudience String?
+  defaultTone    String?
+
+  // Branding
+  brandVoice     String?
+  companyName    String?
+  industry       String?
+
+  // Additional Information
+  disclaimerText String?
+  defaultTags    String[]
+  customFooter   String?
+  senderName     String?
+  senderEmail    String?
+
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+}
+
+/// RssFeed model stores RSS feed information and metadata
+model RssFeed {
+  id          String       @id @default(auto()) @map("_id") @db.ObjectId
+  userId      String       @db.ObjectId
+  user        User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+  url         String
+  title       String?
+  description String?
+  link        String?
+  imageUrl    String?
+  language    String?
+  lastFetched DateTime?
+  articles    RssArticle[]
+  createdAt   DateTime     @default(now())
+  updatedAt   DateTime     @updatedAt
+
+  @@unique([userId, url])
+  @@index([userId])
+}
+
+/// RssArticle model stores individual articles from RSS feeds with deduplication
+/// Articles are deduplicated across all users - same article appears once in database
+model RssArticle {
+  id            String    @id @default(auto()) @map("_id") @db.ObjectId
+  feedId        String    @db.ObjectId
+  feed          RssFeed   @relation(fields: [feedId], references: [id], onDelete: NoAction)
+  guid          String    @unique // RSS unique identifier for deduplication across all users
+  sourceFeedIds String[]  @db.ObjectId // All feed records that reference this article
+  title         String
+  link          String
+  content       String? // Full article content
+  summary       String? // Article summary/description
+  pubDate       DateTime
+  author        String?
+  categories    String[] // Array of category tags
+  imageUrl      String?
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  @@index([feedId])
+  @@index([pubDate])
+  @@index([feedId, pubDate])
+  @@index([sourceFeedIds])
+}
+
+/// Newsletter model stores generated newsletters with all AI-generated content
+model Newsletter {
+  id                     String    @id @default(auto()) @map("_id") @db.ObjectId
+  userId                 String    @db.ObjectId
+  user                   User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  suggestedTitles        String[] // Array of 5 suggested newsletter titles
+  suggestedSubjectLines  String[] // Array of 5 suggested email subject lines
+  body                   String // Main newsletter content/body
+  topAnnouncements       String[] // Array of 5 top news announcements
+  additionalInfo         String? // Any additional information or notes
+  startDate              DateTime // Newsletter time frame start
+  endDate                DateTime // Newsletter time frame end
+  userInput              String? // User's context or additional input
+  feedsUsed              String[] @db.ObjectId // Array of RSS feed IDs used for generation
+  createdAt              DateTime  @default(now())
+  updatedAt              DateTime  @updatedAt
+
+  @@index([userId])
+  @@index([userId, createdAt])
+  @@index([createdAt])
+}
