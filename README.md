@@ -72,9 +72,9 @@ Watch newsletters generate **live** with streaming:
 
 | | |
 |---|---|
-| **Landing Page**<br/>![Home](./screenshots/home.png) | **Features**<br/>![Features](./screenshots/features.png) |
-| **Pricing**<br/>![Pricing](./screenshots/pricing.png) | **Dashboard**<br/>![Dashboard](./screenshots/dashboard.png) |
-| **Newsletter Generation**<br/>![Newsletter Generation](./screenshots/newsletter-generation.png) |  |
+| **Landing Page**<br/>![Home](./public/screenshots/home.png) | **Features**<br/>![Features](./public/screenshots/features.png) |
+| **Pricing**<br/>![Pricing](./public/screenshots/pricing.png) | **Dashboard**<br/>![Dashboard](./public/screenshots/dashboard.png) |
+| **Newsletter Generation**<br/>![Newsletter Generation](./public/screenshots/newsletter-generation.png) |  |
 
 ---
 
